@@ -15,6 +15,7 @@ enum OUTPUT{
 	SERVER = 0,
 	STDOUT = 1,
 	STDERR = 2,
+	WRITEFILE = 3,
 };
 enum ERROR_CODE{
 	LOG_SUCCESS = 0,
@@ -29,18 +30,19 @@ class LogClient
 		int m_output;
 		const char *m_config;
 		char * m_log_path;
+		char * m_log_name;
 		uint32_t m_cmd_ver;
 		gearman_client_st m_client;
 
 	public:
 		LogClient(const char* config=NULL);
 		~LogClient();
-		int log(int level,const char *msg, va_list ap);
 		int logError(const char *msg,...);
 		int logWarning(const char *msg,...);
 		int logInfo(const char *msg,...);
 		int logDebug(const char *msg,...);
 	private: //private utility func
+		int log(int level,const char *msg, va_list ap);
 		int writeLog(const char *slevel,const char *msg);
 		int gearman_send(const char *msg);
 		int stdout_print(const char *msg);

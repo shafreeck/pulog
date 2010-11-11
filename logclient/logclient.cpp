@@ -10,7 +10,7 @@ static void dump(void *msg , int len)
 	fclose(dump);
 
 }
-LogClient::LogClient(const char *config):m_config(config),m_host(NULL),m_port(0),m_output(STDOUT),m_log_level(DEBUG),m_cmd_ver(1)
+LogClient::LogClient(const char *config):m_config(config),m_log_name(NULL),m_log_path(NULL),m_host(NULL),m_port(0),m_output(STDOUT),m_log_level(DEBUG),m_cmd_ver(1)
 {
 	loadConfig();
 	gearman_client_create(&m_client);
@@ -19,8 +19,12 @@ LogClient::LogClient(const char *config):m_config(config),m_host(NULL),m_port(0)
 LogClient::~LogClient()
 {
 	gearman_client_free(&m_client);
-	free(m_log_path);
-	free(m_host);
+	if(m_log_name)
+		free(m_log_name);
+	if(m_host)
+		free(m_host);
+	if(m_log_path)
+		free(m_log_path);
 }
 int LogClient::formatMsg(char *buff,const char* slevel, const char *msg, int len)
 {
@@ -118,7 +122,11 @@ int LogClient::writeLog(const char* slevel,const char * data)// where to write m
 		case STDERR:
 			errcode = stderr_print(msg);
 			break;
-		default:break;
+		case WRITEFILE:
+			errcode = file_write(msg);
+			break;
+		default:
+			break;
 	}
 	return errcode;
 }
@@ -137,12 +145,12 @@ int LogClient::gearman_send(const char *msg)
 
 	//set log name length
 	cur += sizeof(uint32_t);
-	uint32_t log_len = strlen(m_log_path);
+	uint32_t log_len = strlen(m_log_name);
 	memcpy(buff+cur,&log_len,sizeof(uint32_t));
 
 	//set log name
 	cur += sizeof(uint32_t);
-	memcpy(buff+cur,m_log_path,log_len);
+	memcpy(buff+cur,m_log_name,log_len);
 	
 	//set transmited msg length
 	cur+= log_len;
@@ -183,7 +191,15 @@ int LogClient::stderr_print(const char *msg)
 int LogClient::file_write(const char *msg)
 {
 	if(!msg)return LOG_ERROR;
-	//write data
+	FILE *file = fopen(m_log_path,"a");
+	if(!file)
+	{
+		perror("open m_log_path failed");
+		return LOG_ERROR;
+	}
+	fprintf(file,"%s",msg);
+	fclose(file);
+
 	return LOG_SUCCESS;
 }
 int LogClient::loadConfig()
@@ -247,7 +263,10 @@ int LogClient::loadConfig()
 				m_output = 1;
 			else if(!strcmp(value,"STDERR"))	
 				m_output = 2;
-			else {errcode = LOG_ERROR;continue;}
+			else {
+				m_output = 3;
+				m_log_path = strdup(value);
+			}
 
 		}
 		else if(!strcmp(key,"format"))
@@ -256,7 +275,7 @@ int LogClient::loadConfig()
 		}
 		else if(!strcmp(key,"logname"))
 		{
-			m_log_path = strdup(value);
+			m_log_name = strdup(value);
 		}
 	}
 	fclose(fd);
