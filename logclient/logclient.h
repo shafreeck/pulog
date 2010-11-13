@@ -2,8 +2,11 @@
 #define LOG_CLIENT__H
 #include <cctype>
 #include <cstdlib>
+#include <stdint.h>
 #include <cstdarg>
+#ifdef LOG_GEARMAN
 #include <libgearman/gearman.h>
+#endif
 #define MSG_SIZE 512
 enum LOG_LEVEL{// 0 :no log
 	DEBUG = 4,
@@ -32,7 +35,10 @@ class LogClient
 		char * m_log_path;
 		char * m_log_name;
 		uint32_t m_cmd_ver;
+
+#ifdef LOG_GEARMAN
 		gearman_client_st m_client;
+#endif
 
 	public:
 		LogClient(const char* config=NULL);
@@ -44,7 +50,9 @@ class LogClient
 	private: //private utility func
 		int log(int level,const char *msg, va_list ap);
 		int writeLog(const char *slevel,const char *msg);
+#ifdef LOG_GEARMAN
 		int gearman_send(const char *msg);
+#endif
 		int stdout_print(const char *msg);
 		int stderr_print(const char *msg);
 		int file_write(const char *msg);

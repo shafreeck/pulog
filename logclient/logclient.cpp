@@ -13,12 +13,17 @@ static void dump(void *msg , int len)
 LogClient::LogClient(const char *config):m_config(config),m_log_name(NULL),m_log_path(NULL),m_host(NULL),m_port(0),m_output(STDOUT),m_log_level(DEBUG),m_cmd_ver(1)
 {
 	loadConfig();
+
+#ifdef LOG_GEARMAN
 	gearman_client_create(&m_client);
 	gearman_client_add_server(&m_client,m_host,m_port);
+#endif
 }
 LogClient::~LogClient()
 {
+#ifdef LOG_GEARMAN
 	gearman_client_free(&m_client);
+#endif
 	if(m_log_name)
 		free(m_log_name);
 	if(m_host)
@@ -113,9 +118,11 @@ int LogClient::writeLog(const char* slevel,const char * data)// where to write m
 	int errcode = LOG_SUCCESS;
 	switch(m_output)
 	{
+#ifdef LOG_GEARMAN
 		case SERVER:
 			errcode = gearman_send(msg);
 			break;
+#endif
 		case STDOUT:
 			errcode = stdout_print(msg);
 			break;
@@ -130,6 +137,8 @@ int LogClient::writeLog(const char* slevel,const char * data)// where to write m
 	}
 	return errcode;
 }
+
+#ifdef LOG_GEARMAN
 int LogClient::gearman_send(const char *msg)
 {
 	if(!msg)return LOG_ERROR;
@@ -169,13 +178,14 @@ int LogClient::gearman_send(const char *msg)
 //	gearman_client_add_task(&m_client,NULL,NULL,"pulog",NULL,buff,cur,&ret);
 //	gearman_client_run_tasks(&m_client);
 
-	dump(buff,cur);
+	//dump(buff,cur);
 	if(ret != GEARMAN_SUCCESS)
 		printf("%s\n",gearman_client_error(&m_client));
 	delete []buff;
 
 	return errcode;
 }
+#endif
 int LogClient::stdout_print(const char *msg)
 {
 	if(!msg)return LOG_ERROR;
