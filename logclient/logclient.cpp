@@ -1,8 +1,10 @@
 #include "logclient.h"
+#include <string>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
 #include <sys/unistd.h>
+using namespace std;
 static void dump(void *msg , int len)
 {
 	FILE *dump = fopen("dump","w");
@@ -106,6 +108,22 @@ int LogClient::logDebug(const char *msg,...)
 	va_end(ap);
 	return errcode;
 	
+}
+int LogClient::logError(string msg)
+{
+	return logError(msg.c_str());
+}
+int LogClient::logWarning(string msg)
+{
+	return logWarning(msg.c_str());
+}
+int LogClient::logInfo(string msg)
+{
+	return logInfo(msg.c_str());
+}
+int LogClient::logDebug(string msg)
+{
+	return logDebug(msg.c_str());
 }
 int LogClient::writeLog(const char* slevel,const char * data)// where to write msg 
 {

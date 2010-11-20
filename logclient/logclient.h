@@ -1,6 +1,7 @@
 #ifndef LOG_CLIENT__H
 #define LOG_CLIENT__H
 #include <cctype>
+#include <string>
 #include <cstdlib>
 #include <stdint.h>
 #include <cstdarg>
@@ -47,6 +48,11 @@ class LogClient
 		int logWarning(const char *msg,...);
 		int logInfo(const char *msg,...);
 		int logDebug(const char *msg,...);
+// string series
+		int logError(std::string msg);
+		int logWarning(std::string msg);
+		int logInfo(std::string msg);
+		int logDebug(std::string msg);
 	private: //private utility func
 		int log(int level,const char *msg, va_list ap);
 		int writeLog(const char *slevel,const char *msg);
