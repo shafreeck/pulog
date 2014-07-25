@@ -1,3 +1,5 @@
+*deprecated*
+
 distribute log system based on gearman
 bglogger :  worker of gearman
 logclient:  client of gearman
