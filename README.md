@@ -1,4 +1,4 @@
-# *deprecated*
+# *Deprecated*
 
 distribute log system based on gearman
 bglogger :  worker of gearman
